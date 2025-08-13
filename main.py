@@ -4,12 +4,9 @@ from wallet import sort_data
 from wallet import create_analytics_array
 from wallet import save_user_data
 from fastapi.responses import JSONResponse
-
+from firebaseConfig import fs
 import json
 app = FastAPI()
-
-
-
 
 @app.get("/wallet/storeFB")
 def storing(uid:str ,address: str):
@@ -35,8 +32,8 @@ async def moralis_webhook(request: Request):
             print("⚠️ No address found in webhook payload")
             return JSONResponse({"message": "No address found"}, status_code=200)
 
-        # Firestore import
-        from firebaseConfig import fs
+       
+        
         uid = None
         users = fs.collection("USERS").stream()
         for user_doc in users:

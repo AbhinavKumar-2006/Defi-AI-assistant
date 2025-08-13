@@ -250,9 +250,22 @@ def add_address_to_moralis_stream(address: str, stream_id: str):
         print(f"❌ Failed to add address: {e}")
         return None
 
+
+def contains_error(obj):
+    """Recursively check if the response contains any 'error' key."""
+    if isinstance(obj, dict):
+        if "error" in obj:
+            return True
+        return any(contains_error(v) for v in obj.values())
+    elif isinstance(obj, list):
+        return any(contains_error(item) for item in obj)
+    return False
+
 def save_user_data(uid: str, address: str):
     try:
         data = fetchAllData(address)
+        if contains_error(data):
+            raise ValueError("Moralis API returned an error. Likely plan limit reached.")
         fs.collection("USERS").document(uid).collection("wallets").document(address).set(data)
         stream_id = streamID
         add_address_to_moralis_stream(address, stream_id)
