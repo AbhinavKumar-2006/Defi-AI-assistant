@@ -1,4 +1,4 @@
-
+from moralis import streams
 from firebaseConfig import fs
 from moralis import evm_api
 import requests
@@ -235,28 +235,27 @@ def fetchAllData(address: str):
 
 
 def add_address_to_moralis_stream(address: str, stream_id: str):
-    url = f"https://api.moralis.io/streams/v1/{stream_id}/address"
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "X-API-Key": API_KEY
-    }
-    payload = {
-        "address": address
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        print(f"✅ Address {address} added to Moralis stream.")
-    else:
-        print(f"❌ Error adding address: {response.text}")
+    params = {"id": stream_id}
+    list = [address]
+    body = {"address": list}
+    try:
+        result = streams.evm_streams.add_address_to_stream(
+            api_key=API_KEY,
+            body=body,
+            params=params
+        )
+        print(f"✅ Address {address} added to stream {stream_id}.")
+        return result
+    except Exception as e:
+        print(f"❌ Failed to add address: {e}")
+        return None
 
 def save_user_data(uid: str, address: str):
     try:
         data = fetchAllData(address)
         fs.collection("USERS").document(uid).collection("wallets").document(address).set(data)
         stream_id = streamID
-        # add_address_to_moralis_stream(address, stream_id)
+        add_address_to_moralis_stream(address, stream_id)
         
         return {"status": "success"}
     except Exception as e:
